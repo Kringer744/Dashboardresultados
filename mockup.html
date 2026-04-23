@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluxo – Dashboard Meta Ads (Mockup)</title>
+<style>
+  :root {
+    --blue-deep: #005BB5;
+    --blue-mid:  #0077CC;
+    --cyan:      #00D4FF;
+    --cyan-soft: #00AADD;
+    --bg:        #0A0F1E;
+    --surface:   #111827;
+    --surface2:  #1A2235;
+    --border:    rgba(0,212,255,0.15);
+    --text:      #E8F4FF;
+    --text-muted:#7A9BBF;
+    --green:     #00E5A0;
+    --red:       #FF4D6A;
+    --yellow:    #FFB800;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--blue-deep), var(--cyan));
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 70% 50%, 100% 100%, 30% 70%, 0% 100%, 30% 50%, 0% 30%);
+  }
+  .logo-text { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+  .logo-text span { color: var(--cyan); }
+  .logo-sub { font-size: 9px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .badge-live { background: rgba(0,229,160,0.15); color: var(--green); border: 1px solid rgba(0,229,160,0.3); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display:flex;align-items:center;gap:5px; }
+  .dot-live { width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .toolbar label { font-size: 12px; color: var(--text-muted); margin-right: 4px; }
+  select, input[type=date] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 12px; border-radius: 6px; font-size: 13px;
+    cursor: pointer; outline: none;
+  }
+  select:focus, input:focus { border-color: var(--cyan); }
+  .btn {
+    padding: 7px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: linear-gradient(90deg, var(--blue-mid), var(--cyan)); color: #000; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+  .btn-export { background: rgba(0,212,255,0.1); border: 1px solid var(--cyan-soft); color: var(--cyan); margin-left: auto; }
+  .btn-export:hover { background: rgba(0,212,255,0.2); }
+
+  /* LAYOUT */
+  .page { display: flex; height: calc(100vh - 110px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 6px; }
+  .sidebar-title { font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); padding: 0 16px 8px; text-transform: uppercase; }
+  .client-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px; font-size: 13px; cursor: pointer;
+    border-left: 3px solid transparent; transition: all 0.15s;
+  }
+  .client-item:hover { background: rgba(0,212,255,0.07); border-left-color: var(--cyan-soft); }
+  .client-item.active { background: rgba(0,212,255,0.12); border-left-color: var(--cyan); color: var(--cyan); font-weight: 600; }
+  .client-item.all { color: var(--cyan); font-weight: 700; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-deep), var(--cyan)); display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0; }
+  .client-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* MAIN CONTENT */
+  .main { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card:hover { border-color: var(--cyan-soft); }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--blue-deep), var(--cyan));
+  }
+  .kpi-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 8px; }
+  .kpi-value .unit { font-size: 14px; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+  .kpi-delta { display:flex;align-items:center;gap:4px;font-size:12px; }
+  .delta-up { color: var(--green); }
+  .delta-down { color: var(--red); }
+  .kpi-icon { position:absolute;right:16px;top:16px;font-size:22px;opacity:0.2; }
+
+  /* SECTION TITLE */
+  .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display:flex;align-items:center;gap:8px; }
+  .section-title::after { content:'';flex:1;height:1px;background:var(--border); }
+
+  /* CHARTS AREA */
+  .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+  .chart-placeholder {
+    height: 180px; border-radius: 8px;
+    background: repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(0,212,255,0.03) 30px, rgba(0,212,255,0.03) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(0,212,255,0.03) 60px, rgba(0,212,255,0.03) 61px);
+    display:flex;align-items:flex-end;gap:8px;padding:12px;
+  }
+  .bar { background: linear-gradient(180deg, var(--cyan), var(--blue-deep)); border-radius: 4px 4px 0 0; flex:1; opacity: 0.8; }
+  .line-chart { height: 180px; border-radius: 8px; background: rgba(0,212,255,0.03); padding: 12px; display:flex;align-items:center;justify-content:center; }
+  .donut-placeholder { display:flex;align-items:center;justify-content:center;flex-direction:column;height:180px;gap:12px; }
+  .donut { width:110px;height:110px;border-radius:50%;background:conic-gradient(var(--cyan) 0% 45%, var(--blue-mid) 45% 70%, var(--cyan-soft) 70% 85%, var(--text-muted) 85% 100%);position:relative; }
+  .donut::after { content:'';position:absolute;top:20%;left:20%;right:20%;bottom:20%;border-radius:50%;background:var(--surface); }
+  .legend { display:flex;flex-direction:column;gap:6px; }
+  .legend-item { display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted); }
+  .legend-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+
+  /* CLIENTS TABLE */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; text-align: left; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(0,212,255,0.05); }
+  tbody td { padding: 13px 16px; font-size: 13px; }
+  .tag { display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600; }
+  .tag-active { background:rgba(0,229,160,0.15);color:var(--green); }
+  .tag-pause  { background:rgba(255,184,0,0.15);color:var(--yellow); }
+  .progress-bar { height: 4px; border-radius: 2px; background: var(--surface2); overflow:hidden; width: 80px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue-deep), var(--cyan)); border-radius: 2px; }
+
+  /* TOAST */
+  .toast { position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--cyan-soft);color:var(--cyan);padding:10px 18px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">Flu<span>xo</span></div>
+      <div class="logo-sub">Digital & Tech</div>
+    </div>
+  </div>
+  <div style="font-size:14px;color:var(--text-muted)">Dashboard Meta Ads — Resultados de Clientes</div>
+  <div class="header-right">
+    <div class="badge-live"><span class="dot-live"></span> Ao vivo</div>
+  </div>
+</header>
+
+<!-- TOOLBAR / FILTROS -->
+<div class="toolbar">
+  <div>
+    <label>Cliente</label>
+    <select>
+      <option>Todos os clientes</option>
+      <option>Panobianco Marajoara</option>
+      <option>DarksGym (todos)</option>
+      <option>RedFitness - Andorinha</option>
+      <option>X NET</option>
+      <option>Goodbe</option>
+    </select>
+  </div>
+  <div>
+    <label>Período</label>
+    <select>
+      <option>Últimos 7 dias</option>
+      <option>Últimos 30 dias</option>
+      <option>Este mês</option>
+      <option>Mês anterior</option>
+      <option>Personalizado</option>
+    </select>
+  </div>
+  <div>
+    <label>De</label>
+    <input type="date" value="2026-04-01">
+  </div>
+  <div>
+    <label>Até</label>
+    <input type="date" value="2026-04-23">
+  </div>
+  <div>
+    <label>Métrica</label>
+    <select>
+      <option>Resultados gerais</option>
+      <option>Alcance & Impressões</option>
+      <option>Conversões</option>
+      <option>Custo por resultado</option>
+    </select>
+  </div>
+  <button class="btn btn-primary">Aplicar</button>
+  <button class="btn btn-export">⬇ Exportar Relatório</button>
+</div>
+
+<!-- LAYOUT PRINCIPAL -->
+<div class="page">
+
+  <!-- SIDEBAR – lista de clientes -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Clientes</div>
+      <div class="client-item all active">
+        <div class="avatar" style="background:linear-gradient(135deg,#005BB5,#00D4FF)">★</div>
+        <span class="client-name">Visão Geral</span>
+      </div>
+      <div class="client-item">
+        <div class="avatar" style="background:linear-gradient(135deg,#8B0000,#FF4D6A)">PB</div>
+        <span class="client-name">Panobianco</span>
+      </div>
+      <div class="client-item">
+        <div class="avatar" style="background:linear-gradient(135deg,#1a1a1a,#555)">DG</div>
+        <span class="client-name">DarksGym (todos)</span>
+      </div>
+      <div class="client-item" style="padding-left:28px;border-left:3px solid rgba(0,212,255,0.1)">
+        <div class="avatar" style="background:#222;font-size:9px">001</div>
+        <span class="client-name">DarksGym 001</span>
+      </div>
+      <div class="client-item" style="padding-left:28px;border-left:3px solid rgba(0,212,255,0.1)">
+        <div class="avatar" style="background:#222;font-size:9px">002</div>
+        <span class="client-name">DarksGym 002</span>
+      </div>
+      <div class="client-item" style="padding-left:28px;border-left:3px solid rgba(0,212,255,0.1)">
+        <div class="avatar" style="background:#222;font-size:9px">Mauá</div>
+        <span class="client-name">DarksGym Mauá</span>
+      </div>
+      <div class="client-item">
+        <div class="avatar" style="background:linear-gradient(135deg,#8B0000,#CC0000)">RF</div>
+        <span class="client-name">RedFitness</span>
+      </div>
+      <div class="client-item">
+        <div class="avatar" style="background:linear-gradient(135deg,#003366,#0057A8)">XN</div>
+        <span class="client-name">X NET</span>
+      </div>
+      <div class="client-item">
+        <div class="avatar" style="background:linear-gradient(135deg,#2C5F2E,#00A550)">GB</div>
+        <span class="client-name">Goodbe</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">💸</div>
+        <div class="kpi-label">Investimento Total</div>
+        <div class="kpi-value">R$ 42.830<span class="unit"></span></div>
+        <div class="kpi-delta delta-up">▲ 12% vs período anterior</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">👁</div>
+        <div class="kpi-label">Impressões</div>
+        <div class="kpi-value">3,4<span class="unit">M</span></div>
+        <div class="kpi-delta delta-up">▲ 8% vs período anterior</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-label">Resultados (Leads)</div>
+        <div class="kpi-value">1.247</div>
+        <div class="kpi-delta delta-up">▲ 23% vs período anterior</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💡</div>
+        <div class="kpi-label">Custo por Resultado</div>
+        <div class="kpi-value">R$ 34<span class="unit">,36</span></div>
+        <div class="kpi-delta delta-down">▼ 9% — melhorou</div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="section-title">Desempenho ao longo do tempo</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Investimento x Resultados — Diário</div>
+        <div class="chart-placeholder">
+          <div class="bar" style="height:40%"></div><div class="bar" style="height:55%"></div>
+          <div class="bar" style="height:45%"></div><div class="bar" style="height:70%"></div>
+          <div class="bar" style="height:60%"></div><div class="bar" style="height:80%"></div>
+          <div class="bar" style="height:65%"></div><div class="bar" style="height:90%"></div>
+          <div class="bar" style="height:75%"></div><div class="bar" style="height:100%"></div>
+          <div class="bar" style="height:85%"></div><div class="bar" style="height:70%"></div>
+          <div class="bar" style="height:95%"></div><div class="bar" style="height:78%"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Distribuição por Cliente</div>
+        <div class="donut-placeholder">
+          <div class="donut"></div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>DarksGym — 45%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--blue-mid)"></div>Panobianco — 25%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cyan-soft)"></div>RedFitness — 15%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--text-muted)"></div>Outros — 15%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA DE CLIENTES -->
+    <div class="section-title">Resultados por Conta</div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Conta</th>
+            <th>Investido</th>
+            <th>Impressões</th>
+            <th>Cliques</th>
+            <th>CTR</th>
+            <th>CPM</th>
+            <th>Resultados</th>
+            <th>CPR</th>
+            <th>Orçamento usado</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Panobianco</strong></td>
+            <td style="color:var(--text-muted);font-size:11px">1437623713...</td>
+            <td>R$ 8.200</td>
+            <td>680K</td>
+            <td>12.400</td>
+            <td>1,82%</td>
+            <td>R$ 12,06</td>
+            <td>240</td>
+            <td>R$ 34,17</td>
+            <td><div class="progress-bar"><div class="progress-fill" style="width:78%"></div></div></td>
+            <td><span class="tag tag-active">Ativo</span></td>
+          </tr>
+          <tr>
+            <td><strong>DarksGym Principal</strong></td>
+            <td style="color:var(--text-muted);font-size:11px">3807444169...</td>
+            <td>R$ 6.500</td>
+            <td>520K</td>
+            <td>9.800</td>
+            <td>1,88%</td>
+            <td>R$ 12,50</td>
+            <td>190</td>
+            <td>R$ 34,21</td>
+            <td><div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div></td>
+            <td><span class="tag tag-active">Ativo</span></td>
+          </tr>
+          <tr>
+            <td><strong>DarksGym Mauá</strong></td>
+            <td style="color:var(--text-muted);font-size:11px">1302468848...</td>
+            <td>R$ 4.100</td>
+            <td>330K</td>
+            <td>5.900</td>
+            <td>1,79%</td>
+            <td>R$ 12,42</td>
+            <td>118</td>
+            <td>R$ 34,75</td>
+            <td><div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div></td>
+            <td><span class="tag tag-active">Ativo</span></td>
+          </tr>
+          <tr>
+            <td><strong>RedFitness</strong></td>
+            <td style="color:var(--text-muted);font-size:11px">2090206971...</td>
+            <td>R$ 5.800</td>
+            <td>470K</td>
+            <td>8.200</td>
+            <td>1,74%</td>
+            <td>R$ 12,34</td>
+            <td>162</td>
+            <td>R$ 35,80</td>
+            <td><div class="progress-bar"><div class="progress-fill" style="width:72%"></div></div></td>
+            <td><span class="tag tag-pause">Pausado</span></td>
+          </tr>
+          <tr>
+            <td><strong>X NET</strong></td>
+            <td style="color:var(--text-muted);font-size:11px">1806762126...</td>
+            <td>R$ 3.200</td>
+            <td>258K</td>
+            <td>4.100</td>
+            <td>1,59%</td>
+            <td>R$ 12,40</td>
+            <td>89</td>
+            <td>R$ 35,96</td>
+            <td><div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div></td>
+            <td><span class="tag tag-active">Ativo</span></td>
+          </tr>
+          <tr>
+            <td><strong>Goodbe</strong></td>
+            <td style="color:var(--text-muted);font-size:11px">1235315075...</td>
+            <td>R$ 2.900</td>
+            <td>236K</td>
+            <td>3.700</td>
+            <td>1,57%</td>
+            <td>R$ 12,29</td>
+            <td>79</td>
+            <td>R$ 36,71</td>
+            <td><div class="progress-bar"><div class="progress-fill" style="width:35%"></div></div></td>
+            <td><span class="tag tag-active">Ativo</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast">📋 Mockup de design — dados ilustrativos</div>
+
+</body>
+</html>
