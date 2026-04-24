@@ -120,7 +120,7 @@ function KPICard({ card, daily, loading }) {
           <ResponsiveContainer width="100%" height={50}>
             <AreaChart data={chartData}>
               <defs>
-                <linearGradient id={`g-${card.label}`} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`g-${card.key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={card.color} stopOpacity={0.25} />
                   <stop offset="100%" stopColor={card.color} stopOpacity={0} />
                 </linearGradient>
@@ -133,7 +133,7 @@ function KPICard({ card, daily, loading }) {
                 }
               />
               <Area type="monotone" dataKey="v" stroke={card.color} strokeWidth={1.5}
-                fill={`url(#g-${card.label})`} dot={false} />
+                fill={`url(#g-${card.key})`} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

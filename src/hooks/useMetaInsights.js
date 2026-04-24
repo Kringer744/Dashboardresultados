@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchAllInsights, fetchAllAccountInfo, fetchAllCampaigns } from '../api/meta.js'
+import { fetchAllInsights, fetchAllAccountInfo, fetchAllCampaigns, fetchAllDailyOnly } from '../api/meta.js'
 import { ACCOUNTS } from '../config/accounts.js'
 
 export function useMetaInsights(selectedIds, preset) {
   const [data, setData]               = useState([])
   const [accountInfo, setAccountInfo] = useState({})
   const [campaigns, setCampaigns]     = useState([])
+  const [daily6m, setDaily6m]         = useState([])
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState(null)
   const [lastFetch, setLastFetch]     = useState(null)
@@ -15,7 +16,7 @@ export function useMetaInsights(selectedIds, preset) {
 
   const load = async (ids, p) => {
     if (!ids.length) {
-      setData([]); setCampaigns([]); setAccountInfo({})
+      setData([]); setCampaigns([]); setAccountInfo({}); setDaily6m([])
       return
     }
 
@@ -26,10 +27,11 @@ export function useMetaInsights(selectedIds, preset) {
     setCampaigns([])
 
     try {
-      const [insights, infos, camps] = await Promise.all([
+      const [insights, infos, camps, d6m] = await Promise.all([
         fetchAllInsights(ids, p),
         fetchAllAccountInfo(ids),
         fetchAllCampaigns(ids, p),
+        fetchAllDailyOnly(ids, 'last_6m'),
       ])
 
       // ignora se já veio uma requisição mais nova
@@ -40,6 +42,7 @@ export function useMetaInsights(selectedIds, preset) {
       for (const i of infos) infoMap[i.accountId] = i
       setAccountInfo(infoMap)
       setCampaigns(camps)
+      setDaily6m(d6m)
       setLastFetch(new Date())
     } catch (e) {
       if (token !== loadToken.current) return
@@ -98,5 +101,5 @@ export function useMetaInsights(selectedIds, preset) {
     ...ACCOUNTS.find(a => a.id === c.accountId),
   }))
 
-  return { data: enriched, totals, daily, accountInfo, campaigns: enrichedCampaigns, loading, error, refetch, lastFetch }
+  return { data: enriched, totals, daily, daily6m, accountInfo, campaigns: enrichedCampaigns, loading, error, refetch, lastFetch }
 }

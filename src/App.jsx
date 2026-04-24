@@ -24,7 +24,7 @@ export default function App() {
     document.documentElement.className = theme === 'light' ? 'light' : ''
   }, [theme])
 
-  const { data, totals, daily, accountInfo, campaigns, loading, error, refetch, lastFetch } = useMetaInsights(selected, preset)
+  const { data, totals, daily, daily6m, accountInfo, campaigns, loading, error, refetch, lastFetch } = useMetaInsights(selected, preset)
 
   const errCount = data.filter(r => r.error).length
 
@@ -60,7 +60,7 @@ export default function App() {
               ? <div style={styles.emptyState}>Selecione ao menos um cliente na barra lateral para ver os dados.</div>
               : <>
                   <KPICards totals={totals} daily={daily} loading={loading} />
-                  <Charts daily={daily} accountData={data} />
+                  <Charts daily={daily} daily6m={daily6m} accountData={data} />
                   <CampaignsSection campaigns={campaigns.filter(c => selected.includes(c.accountId))} loading={loading} />
                   <AccountsTable data={data} loading={loading} />
                 </>

@@ -22,7 +22,7 @@ function groupByMonth(daily) {
   return Object.values(map).sort((a, b) => b.key.localeCompare(a.key)) // newest first
 }
 
-export default function Charts({ daily, accountData }) {
+export default function Charts({ daily, daily6m = [], accountData }) {
   const [metric, setMetric] = useState('spend')
 
   const metrics = [
@@ -58,7 +58,8 @@ export default function Charts({ daily, accountData }) {
     )
   }
 
-  const monthlyData = groupByMonth(daily)
+  // Use 6-month data for monthly comparison; fall back to current period if not loaded yet
+  const monthlyData = groupByMonth(daily6m.length > 0 ? daily6m : daily)
 
   return (
     <div>

@@ -23,6 +23,10 @@ function getDateRange(preset) {
       const e = new Date(now.getFullYear(), now.getMonth(), 0)
       return { since: fmt(s), until: fmt(e) }
     }
+    case 'last_6m': {
+      const s = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+      return { since: fmt(s), until: fmt(now) }
+    }
     default:           return { since: fmt(addDays(now, -30)), until: fmt(now) }
   }
 }
@@ -203,6 +207,35 @@ export async function fetchAllCampaigns(accountIds, preset) {
   return results.flatMap((r, i) =>
     r.status === 'fulfilled' ? r.value : []
   )
+}
+
+export async function fetchDailyOnly(accountId, preset) {
+  const dateRange = getDateRange(preset)
+  const rows = await fetchInsights(accountId, dateRange, '1')
+  return rows.map(d => ({
+    date:        d.date_start,
+    spend:       parseFloat(d.spend) || 0,
+    impressions: parseInt(d.impressions) || 0,
+    clicks:      parseInt(d.clicks) || 0,
+    leads:       extractLeads(d.actions),
+  }))
+}
+
+export async function fetchAllDailyOnly(accountIds, preset) {
+  const results = await Promise.allSettled(accountIds.map(id => fetchDailyOnly(id, preset)))
+  // Merge all accounts into a single daily aggregate
+  const map = {}
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue
+    for (const d of r.value) {
+      if (!map[d.date]) map[d.date] = { date: d.date, spend: 0, impressions: 0, clicks: 0, leads: 0 }
+      map[d.date].spend       += d.spend
+      map[d.date].impressions += d.impressions
+      map[d.date].clicks      += d.clicks
+      map[d.date].leads       += d.leads
+    }
+  }
+  return Object.values(map).sort((a, b) => a.date.localeCompare(b.date))
 }
 
 export async function fetchAllInsights(accountIds, preset) {
