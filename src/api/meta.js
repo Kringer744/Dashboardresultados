@@ -32,26 +32,29 @@ function getDateRange(preset) {
 }
 
 function extractLeads(actions = []) {
-  // Cada grupo representa um objetivo de campanha — retorna o primeiro que tiver valor
-  // para evitar double-counting entre tipos sobrepostos do mesmo objetivo
+  // Espelha exatamente a coluna "Resultado" do Meta Ads Manager.
+  // Cada grupo = um objetivo de campanha. Pega o maior dentro do grupo
+  // (evita alias duplicados) e soma entre grupos distintos
+  // (conta leads form + conversas iniciadas de contas mistas).
+  //
+  // REMOVIDOS intencionalmente:
+  //   - onsite_conversion.lead_grouped  → agrega sub-tipos demais, causa inflate
+  //   - onsite_conversion.total_messaging_connection → conta TODAS interações
+  //     de msg, não só conversas iniciadas (bate com Meta AM "Conversas por msg")
   const GROUPS = [
-    // Grupo 1: Lead Ads (formulário nativo)
-    ['lead', 'onsite_conversion.lead_grouped'],
-    // Grupo 2: Conversas iniciadas / Mensagens (objetivo MESSAGES)
-    [
-      'onsite_conversion.messaging_conversation_started_7d',
-      'messaging_conversation_started_7d',
-      'onsite_conversion.total_messaging_connection',
-    ],
-    // Grupo 3: Lead via pixel (site externo)
+    // Grupo 1: Lead Ads (formulário nativo) — objetivo LEAD_GENERATION
+    ['lead'],
+    // Grupo 2: Conversas iniciadas — objetivo MESSAGES
+    // "messaging_conversation_started_7d" é exatamente o que o Meta AM exibe
+    ['messaging_conversation_started_7d', 'onsite_conversion.messaging_conversation_started_7d'],
+    // Grupo 3: Lead via pixel (site externo) — objetivo CONVERSIONS
     ['offsite_conversion.fb_pixel_lead'],
-    // Grupo 4: Compra / conversão
+    // Grupo 4: Compra / cadastro — objetivo CONVERSIONS
     ['offsite_conversion.fb_pixel_purchase', 'offsite_conversion.fb_pixel_complete_registration'],
   ]
 
   let total = 0
   for (const group of GROUPS) {
-    // Dentro de cada grupo pega o maior valor (evita dupla contagem entre alias)
     let groupMax = 0
     for (const t of group) {
       const a = actions.find(x => x.action_type === t)
