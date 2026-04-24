@@ -18,7 +18,7 @@ const OBJECTIVE_LABEL = {
 }
 
 export default function CampaignsSection({ campaigns, loading }) {
-  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [statusFilter, setStatusFilter] = useState('ACTIVE')
   const [search, setSearch]             = useState('')
   const [sort, setSort]                 = useState({ key: 'spend', dir: -1 })
 

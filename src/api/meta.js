@@ -66,7 +66,15 @@ function extractLeads(actions = []) {
 }
 
 function extractCPR(cost_per_action_type = []) {
-  const types = ['lead', 'offsite_conversion.fb_pixel_lead', 'onsite_conversion.lead_grouped']
+  // Mesma ordem de prioridade que extractLeads — garante CPL da métrica certa
+  const types = [
+    'messaging_conversation_started_7d',
+    'onsite_conversion.messaging_conversation_started_7d',
+    'lead',
+    'offsite_conversion.fb_pixel_lead',
+    'offsite_conversion.fb_pixel_purchase',
+    'offsite_conversion.fb_pixel_complete_registration',
+  ]
   for (const t of types) {
     const a = cost_per_action_type.find(x => x.action_type === t)
     if (a) return parseFloat(a.value) || 0
