@@ -6,6 +6,22 @@ import {
 import { fDate, fCurrency, fCompact, fNumber } from '../utils/format.js'
 import { ACCOUNTS } from '../config/accounts.js'
 
+const MONTH_NAMES = { '01':'JAN','02':'FEV','03':'MAR','04':'ABR','05':'MAI','06':'JUN','07':'JUL','08':'AGO','09':'SET','10':'OUT','11':'NOV','12':'DEZ' }
+
+function groupByMonth(daily) {
+  const map = {}
+  for (const d of daily) {
+    const key = d.date.substring(0, 7) // YYYY-MM
+    if (!map[key]) map[key] = { key, spend: 0, leads: 0, impressions: 0, clicks: 0, days: 0 }
+    map[key].spend       += d.spend       || 0
+    map[key].leads       += d.leads       || 0
+    map[key].impressions += d.impressions || 0
+    map[key].clicks      += d.clicks      || 0
+    map[key].days++
+  }
+  return Object.values(map).sort((a, b) => b.key.localeCompare(a.key)) // newest first
+}
+
 export default function Charts({ daily, accountData }) {
   const [metric, setMetric] = useState('spend')
 
@@ -42,7 +58,10 @@ export default function Charts({ daily, accountData }) {
     )
   }
 
+  const monthlyData = groupByMonth(daily)
+
   return (
+    <div>
     <div style={styles.grid}>
       {/* Main area chart */}
       <div style={styles.card}>
@@ -137,7 +156,102 @@ export default function Charts({ daily, accountData }) {
         </div>
       </div>
     </div>
+
+    {/* Monthly comparison table */}
+    {monthlyData.length > 0 && <MonthlyComparison months={monthlyData} />}
+    </div>
   )
+}
+
+/* ─── Monthly Comparison ──────────────────────────────────────── */
+function MonthlyComparison({ months }) {
+  const currentKey = months[0]?.key
+  const cols = [
+    { label: 'Valor Investido', fn: m => fCurrency(m.spend),                                   color: '#00D4FF' },
+    { label: 'Leads Gerados',   fn: m => fNumber(m.leads),                                     color: '#00E5A0' },
+    { label: 'CPL',             fn: m => m.leads > 0 ? fCurrency(m.spend / m.leads) : '—',     color: '#FFB800' },
+    { label: 'CPM',             fn: m => m.impressions > 0 ? fCurrency((m.spend / m.impressions) * 1000) : '—', color: '#FF6B8A' },
+  ]
+
+  return (
+    <div style={mS.wrap}>
+      <div style={mS.header}>
+        <span style={mS.title}>Comparativo Mensal</span>
+        <span style={mS.sub}>{months.length} {months.length === 1 ? 'mês' : 'meses'} com dados</span>
+      </div>
+
+      <div style={mS.tableWrap}>
+        <table style={mS.table}>
+          <thead>
+            <tr>
+              <th style={{ ...mS.th, textAlign: 'left', width: 80 }}>Mês</th>
+              {cols.map(c => (
+                <th key={c.label} style={{ ...mS.th, textAlign: 'right' }}>{c.label}</th>
+              ))}
+              <th style={{ ...mS.th, textAlign: 'right', width: 90 }}>vs anterior</th>
+            </tr>
+          </thead>
+          <tbody>
+            {months.map((m, i) => {
+              const isCurrent = m.key === currentKey
+              const prev      = months[i + 1]
+              const delta     = prev && prev.spend > 0 ? ((m.spend - prev.spend) / prev.spend) * 100 : null
+              const isUp      = delta !== null && delta >= 0
+
+              return (
+                <tr key={m.key} style={{ ...mS.tr, ...(isCurrent ? mS.trCurrent : i % 2 === 0 ? mS.trEven : {}) }}>
+                  <td style={mS.td}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {isCurrent && <div style={mS.currentBar} />}
+                      <div>
+                        <div style={{ ...mS.monthName, color: isCurrent ? 'var(--cyan)' : 'var(--text)' }}>
+                          {MONTH_NAMES[m.key.substring(5)] || m.key.substring(5)}
+                        </div>
+                        <div style={mS.monthYear}>{m.key.substring(0, 4)}</div>
+                      </div>
+                      {isCurrent && <span style={mS.currentBadge}>atual</span>}
+                    </div>
+                  </td>
+                  {cols.map(c => (
+                    <td key={c.label} style={{ ...mS.td, textAlign: 'right', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? c.color : 'var(--text-soft)' }}>
+                      {c.fn(m)}
+                    </td>
+                  ))}
+                  <td style={{ ...mS.td, textAlign: 'right' }}>
+                    {delta !== null
+                      ? <span style={{ ...mS.deltaBadge, color: isUp ? 'var(--green)' : 'var(--red)', background: isUp ? 'rgba(0,229,160,0.1)' : 'rgba(255,77,106,0.1)' }}>
+                          {isUp ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
+                        </span>
+                      : <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
+                    }
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+const mS = {
+  wrap:       { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 },
+  header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)' },
+  title:      { fontSize: 13, fontWeight: 700, color: 'var(--text)' },
+  sub:        { fontSize: 11, color: 'var(--text-muted)' },
+  tableWrap:  { overflowX: 'auto' },
+  table:      { width: '100%', borderCollapse: 'collapse', minWidth: 500 },
+  th:         { padding: '9px 18px', fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: 0.8, textTransform: 'uppercase', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' },
+  tr:         { borderBottom: '1px solid var(--border)', transition: 'background 0.15s' },
+  trEven:     { background: 'rgba(255,255,255,0.01)' },
+  trCurrent:  { background: 'rgba(0,212,255,0.05)', borderLeft: '3px solid var(--cyan)' },
+  td:         { padding: '14px 18px', fontSize: 13, whiteSpace: 'nowrap' },
+  currentBar: { width: 3, height: 32, borderRadius: 2, background: 'var(--cyan)', flexShrink: 0 },
+  monthName:  { fontSize: 13, fontWeight: 800, letterSpacing: 0.5 },
+  monthYear:  { fontSize: 10, color: 'var(--text-muted)', marginTop: 1 },
+  currentBadge: { fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'rgba(0,212,255,0.15)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.25)' },
+  deltaBadge: { fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6 },
 }
 
 const styles = {

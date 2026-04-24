@@ -62,14 +62,34 @@ export default function KPICards({ totals, daily, loading }) {
   )
 }
 
+function monthOverMonth(daily, key) {
+  const map = {}
+  for (const d of daily) {
+    const m = d.date.substring(0, 7)
+    if (!map[m]) map[m] = 0
+    map[m] += d[key] || 0
+  }
+  const keys = Object.keys(map).sort()
+  if (keys.length < 2) return null
+  const prev = map[keys[keys.length - 2]]
+  const curr = map[keys[keys.length - 1]]
+  if (!prev) return null
+  return ((curr - prev) / prev) * 100
+}
+
 function KPICard({ card, daily, loading }) {
   const chartData = daily.slice(-14).map(d => ({ v: d[card.key] || 0, date: d.date }))
-  const prev = chartData.slice(0, Math.floor(chartData.length / 2))
-  const curr = chartData.slice(Math.floor(chartData.length / 2))
-  const prevSum = prev.reduce((s, d) => s + d.v, 0)
-  const currSum = curr.reduce((s, d) => s + d.v, 0)
-  const pct = prevSum > 0 ? ((currSum - prevSum) / prevSum) * 100 : null
-  const isUp = pct !== null && pct >= 0
+
+  // Delta: prefer month-over-month, fall back to half-period
+  let pct = card.noSparkline ? null : monthOverMonth(daily, card.key)
+  if (pct === null && !card.noSparkline && chartData.length >= 4) {
+    const half    = Math.floor(chartData.length / 2)
+    const prevSum = chartData.slice(0, half).reduce((s, d) => s + d.v, 0)
+    const currSum = chartData.slice(half).reduce((s, d) => s + d.v, 0)
+    pct = prevSum > 0 ? ((currSum - prevSum) / prevSum) * 100 : null
+  }
+
+  const isUp   = pct !== null && pct >= 0
   const isGood = card.invert ? !isUp : isUp
 
   return (
@@ -79,17 +99,19 @@ function KPICard({ card, daily, loading }) {
         <div style={{ ...styles.iconBox, background: `${card.color}18`, border: `1px solid ${card.color}30` }}>
           {React.cloneElement(card.icon, { color: card.color })}
         </div>
-        {pct !== null && (
-          <span style={{ ...styles.delta, color: isGood ? 'var(--green)' : 'var(--red)', background: isGood ? 'rgba(0,229,160,0.1)' : 'rgba(255,77,106,0.1)' }}>
-            {isUp ? '▲' : '▼'} {Math.abs(pct).toFixed(1)}%
-          </span>
-        )}
       </div>
 
       <div style={styles.cardLabel}>{card.label}</div>
       {loading
         ? <div style={styles.skeleton} />
-        : <div style={{ ...styles.cardValue, color: card.color }}>{card.value}</div>
+        : <div style={styles.valueRow}>
+            <div style={{ ...styles.cardValue, color: card.color }}>{card.value}</div>
+            {pct !== null && (
+              <span style={{ ...styles.delta, color: isGood ? 'var(--green)' : 'var(--red)', background: isGood ? 'rgba(0,229,160,0.1)' : 'rgba(255,77,106,0.1)' }}>
+                {isUp ? '▲' : '▼'} {Math.abs(pct).toFixed(1)}%
+              </span>
+            )}
+          </div>
       }
       <div style={styles.cardSub}>{card.sub}</div>
 
@@ -135,7 +157,8 @@ const styles = {
   iconBox: { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   delta: { fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20 },
   cardLabel: { fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, letterSpacing: 0.3 },
-  cardValue: { fontSize: 24, fontWeight: 800, letterSpacing: -0.5, marginBottom: 4 },
+  valueRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 },
+  cardValue: { fontSize: 24, fontWeight: 800, letterSpacing: -0.5 },
   cardSub: { fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 },
   sparkline: { margin: '0 -16px' },
   skeleton: { height: 30, borderRadius: 6, background: 'var(--surface3)', marginBottom: 4 },
