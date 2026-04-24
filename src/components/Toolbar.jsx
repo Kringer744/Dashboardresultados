@@ -2,7 +2,7 @@ import React from 'react'
 import { DATE_PRESETS } from '../config/accounts.js'
 import AlertsBell from './AlertsBell.jsx'
 
-export default function Toolbar({ preset, onPreset, onExport, onPresent, loading, accountData = [] }) {
+export default function Toolbar({ preset, onPreset, onExport, onPresent, loading, accountData = [], theme = 'dark', onToggleTheme }) {
   return (
     <div style={styles.toolbar}>
       <div style={styles.left}>
@@ -22,6 +22,13 @@ export default function Toolbar({ preset, onPreset, onExport, onPresent, loading
 
       <div style={styles.right}>
         <AlertsBell accountData={accountData} />
+        <button style={styles.themeBtn} onClick={onToggleTheme} title={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}>
+          {theme === 'dark'
+            ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            : <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          }
+          {theme === 'dark' ? 'Claro' : 'Escuro'}
+        </button>
         <button style={styles.presentBtn} onClick={onPresent} disabled={loading}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
             <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
@@ -64,6 +71,15 @@ const styles = {
     fontWeight: 600,
   },
   right: { display: 'flex', alignItems: 'center', gap: 8 },
+  themeBtn: {
+    display: 'flex', alignItems: 'center', gap: 5,
+    padding: '7px 13px', borderRadius: 8,
+    background: 'var(--surface2)',
+    border: '1px solid var(--border-md)',
+    color: 'var(--text-soft)', fontSize: 11, fontWeight: 600,
+    cursor: 'pointer', transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+  },
   presentBtn: {
     display: 'flex', alignItems: 'center', gap: 6,
     padding: '7px 16px', borderRadius: 8,

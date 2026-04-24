@@ -20,6 +20,28 @@
   --radius-sm:  8px;
 }
 
+html.light {
+  --bg:         #EEF1F6;
+  --surface:    #FFFFFF;
+  --surface2:   #F3F6FA;
+  --surface3:   #E4EAF2;
+  --border:     rgba(0, 100, 180, 0.1);
+  --border-md:  rgba(0, 100, 180, 0.22);
+  --cyan:       #0077CC;
+  --cyan-dim:   rgba(0, 119, 204, 0.12);
+  --blue:       #0055AA;
+  --blue-mid:   #0066BB;
+  --text:       #0F1F30;
+  --text-muted: #6B8299;
+  --text-soft:  #3A5570;
+  --green:      #00966B;
+  --red:        #D63050;
+  --yellow:     #C07800;
+  --glow-cyan:  0 0 0 1px rgba(0,119,204,0.2), 0 0 20px rgba(0,119,204,0.08);
+  --radius:     12px;
+  --radius-sm:  8px;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
@@ -29,6 +51,7 @@ html, body, #root {
   color: var(--text);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.25s, color 0.25s;
 }
 
 button { cursor: pointer; font-family: inherit; }

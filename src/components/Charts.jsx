@@ -158,7 +158,7 @@ export default function Charts({ daily, accountData }) {
     </div>
 
     {/* Monthly comparison table */}
-    {monthlyData.length > 0 && <MonthlyComparison months={monthlyData} />}
+    {monthlyData.length > 0 && <MonthlyComparison months={monthlyData.slice(0, 6)} />}
     </div>
   )
 }
@@ -166,11 +166,33 @@ export default function Charts({ daily, accountData }) {
 /* ─── Monthly Comparison ──────────────────────────────────────── */
 function MonthlyComparison({ months }) {
   const currentKey = months[0]?.key
+
   const cols = [
-    { label: 'Valor Investido', fn: m => fCurrency(m.spend),                                   color: '#00D4FF' },
-    { label: 'Leads Gerados',   fn: m => fNumber(m.leads),                                     color: '#00E5A0' },
-    { label: 'CPL',             fn: m => m.leads > 0 ? fCurrency(m.spend / m.leads) : '—',     color: '#FFB800' },
-    { label: 'CPM',             fn: m => m.impressions > 0 ? fCurrency((m.spend / m.impressions) * 1000) : '—', color: '#FF6B8A' },
+    {
+      label: 'Valor Investido',
+      color: '#00D4FF',
+      fn: m => fCurrency(m.spend),
+      deltaFn: (m, prev) => prev && prev.spend > 0 ? ((m.spend - prev.spend) / prev.spend) * 100 : null,
+      invert: false,
+    },
+    {
+      label: 'Leads Gerados',
+      color: '#00E5A0',
+      fn: m => fNumber(m.leads),
+      deltaFn: (m, prev) => prev && prev.leads > 0 ? ((m.leads - prev.leads) / prev.leads) * 100 : null,
+      invert: false,
+    },
+    {
+      label: 'CPL',
+      color: '#FFB800',
+      fn: m => m.leads > 0 ? fCurrency(m.spend / m.leads) : '—',
+      deltaFn: (m, prev) => {
+        const curr = m.leads > 0 ? m.spend / m.leads : null
+        const p    = prev && prev.leads > 0 ? prev.spend / prev.leads : null
+        return curr && p ? ((curr - p) / p) * 100 : null
+      },
+      invert: true,
+    },
   ]
 
   return (
@@ -184,19 +206,16 @@ function MonthlyComparison({ months }) {
         <table style={mS.table}>
           <thead>
             <tr>
-              <th style={{ ...mS.th, textAlign: 'left', width: 80 }}>Mês</th>
+              <th style={{ ...mS.th, textAlign: 'left', width: 90 }}>Mês</th>
               {cols.map(c => (
                 <th key={c.label} style={{ ...mS.th, textAlign: 'right' }}>{c.label}</th>
               ))}
-              <th style={{ ...mS.th, textAlign: 'right', width: 90 }}>vs anterior</th>
             </tr>
           </thead>
           <tbody>
             {months.map((m, i) => {
               const isCurrent = m.key === currentKey
               const prev      = months[i + 1]
-              const delta     = prev && prev.spend > 0 ? ((m.spend - prev.spend) / prev.spend) * 100 : null
-              const isUp      = delta !== null && delta >= 0
 
               return (
                 <tr key={m.key} style={{ ...mS.tr, ...(isCurrent ? mS.trCurrent : i % 2 === 0 ? mS.trEven : {}) }}>
@@ -212,19 +231,24 @@ function MonthlyComparison({ months }) {
                       {isCurrent && <span style={mS.currentBadge}>atual</span>}
                     </div>
                   </td>
-                  {cols.map(c => (
-                    <td key={c.label} style={{ ...mS.td, textAlign: 'right', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? c.color : 'var(--text-soft)' }}>
-                      {c.fn(m)}
-                    </td>
-                  ))}
-                  <td style={{ ...mS.td, textAlign: 'right' }}>
-                    {delta !== null
-                      ? <span style={{ ...mS.deltaBadge, color: isUp ? 'var(--green)' : 'var(--red)', background: isUp ? 'rgba(0,229,160,0.1)' : 'rgba(255,77,106,0.1)' }}>
-                          {isUp ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
-                        </span>
-                      : <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
-                    }
-                  </td>
+                  {cols.map(c => {
+                    const delta  = c.deltaFn(m, prev)
+                    const isUp   = delta !== null && delta >= 0
+                    const isGood = c.invert ? !isUp : isUp
+                    return (
+                      <td key={c.label} style={{ ...mS.td, textAlign: 'right' }}>
+                        <div style={{ fontWeight: isCurrent ? 700 : 500, color: isCurrent ? c.color : 'var(--text-soft)', fontSize: 13 }}>
+                          {c.fn(m)}
+                        </div>
+                        {delta !== null
+                          ? <div style={{ fontSize: 10, fontWeight: 700, color: isGood ? 'var(--green)' : 'var(--red)', marginTop: 3 }}>
+                              {isUp ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}% vs ant.
+                            </div>
+                          : <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>—</div>
+                        }
+                      </td>
+                    )
+                  })}
                 </tr>
               )
             })}
@@ -236,22 +260,21 @@ function MonthlyComparison({ months }) {
 }
 
 const mS = {
-  wrap:       { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 },
-  header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)' },
-  title:      { fontSize: 13, fontWeight: 700, color: 'var(--text)' },
-  sub:        { fontSize: 11, color: 'var(--text-muted)' },
-  tableWrap:  { overflowX: 'auto' },
-  table:      { width: '100%', borderCollapse: 'collapse', minWidth: 500 },
-  th:         { padding: '9px 18px', fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: 0.8, textTransform: 'uppercase', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' },
-  tr:         { borderBottom: '1px solid var(--border)', transition: 'background 0.15s' },
-  trEven:     { background: 'rgba(255,255,255,0.01)' },
-  trCurrent:  { background: 'rgba(0,212,255,0.05)', borderLeft: '3px solid var(--cyan)' },
-  td:         { padding: '14px 18px', fontSize: 13, whiteSpace: 'nowrap' },
-  currentBar: { width: 3, height: 32, borderRadius: 2, background: 'var(--cyan)', flexShrink: 0 },
-  monthName:  { fontSize: 13, fontWeight: 800, letterSpacing: 0.5 },
-  monthYear:  { fontSize: 10, color: 'var(--text-muted)', marginTop: 1 },
+  wrap:         { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 20 },
+  header:       { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)' },
+  title:        { fontSize: 13, fontWeight: 700, color: 'var(--text)' },
+  sub:          { fontSize: 11, color: 'var(--text-muted)' },
+  tableWrap:    { overflowX: 'auto' },
+  table:        { width: '100%', borderCollapse: 'collapse', minWidth: 420 },
+  th:           { padding: '9px 20px', fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: 0.8, textTransform: 'uppercase', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' },
+  tr:           { borderBottom: '1px solid var(--border)', transition: 'background 0.15s' },
+  trEven:       { background: 'rgba(255,255,255,0.01)' },
+  trCurrent:    { background: 'rgba(0,212,255,0.05)', borderLeft: '3px solid var(--cyan)' },
+  td:           { padding: '12px 20px', whiteSpace: 'nowrap' },
+  currentBar:   { width: 3, height: 32, borderRadius: 2, background: 'var(--cyan)', flexShrink: 0 },
+  monthName:    { fontSize: 13, fontWeight: 800, letterSpacing: 0.5 },
+  monthYear:    { fontSize: 10, color: 'var(--text-muted)', marginTop: 1 },
   currentBadge: { fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'rgba(0,212,255,0.15)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.25)' },
-  deltaBadge: { fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6 },
 }
 
 const styles = {

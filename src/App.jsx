@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ACCOUNTS } from './config/accounts.js'
 import { useMetaInsights } from './hooks/useMetaInsights.js'
 import Sidebar from './components/Sidebar.jsx'
@@ -18,6 +18,11 @@ export default function App() {
   const [preset, setPreset]     = useState('last_30d')
   const [showExport, setShowExport] = useState(false)
   const [showPresent, setShowPresent] = useState(false)
+  const [theme, setTheme]       = useState('dark')
+
+  useEffect(() => {
+    document.documentElement.className = theme === 'light' ? 'light' : ''
+  }, [theme])
 
   const { data, totals, daily, accountInfo, campaigns, loading, error, refetch, lastFetch } = useMetaInsights(selected, preset)
 
@@ -28,7 +33,7 @@ export default function App() {
       <Sidebar selected={selected} onSelect={setSelected} accountInfo={accountInfo} />
 
       <div style={styles.main}>
-        <Toolbar preset={preset} onPreset={setPreset} onExport={() => setShowExport(true)} onPresent={() => setShowPresent(true)} loading={loading} accountData={data} />
+        <Toolbar preset={preset} onPreset={setPreset} onExport={() => setShowExport(true)} onPresent={() => setShowPresent(true)} loading={loading} accountData={data} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />
 
         <div style={styles.content}>
           <Header alertCount={errCount} lastFetch={lastFetch} onRefresh={refetch} loading={loading} />
