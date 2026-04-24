@@ -15,11 +15,11 @@ export default function KPICards({ totals, daily, loading }) {
     },
     {
       label: 'Alcance',
-      value: fCompact(totals.reach),
+      value: fNumber(totals.reach),
       sub: `CTR médio: ${fPct(totals.ctr)}`,
       color: '#7B61FF',
       key: 'reach',
-      format: v => fCompact(v),
+      format: v => fNumber(v),
       icon: <EyeIcon />,
     },
     {
