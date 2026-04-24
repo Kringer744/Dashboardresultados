@@ -28,27 +28,33 @@ function getDateRange(preset) {
 }
 
 function extractLeads(actions = []) {
-  // Tipos explícitos por objetivo de campanha — sem overlap
-  const RESULT_TYPES = [
-    // Lead Ads / pixel
-    'lead',
-    'offsite_conversion.fb_pixel_lead',
-    'onsite_conversion.lead_grouped',
-    // Mensagens / Conversas iniciadas (objetivo MESSAGES)
-    'onsite_conversion.messaging_conversation_started_7d',
-    'onsite_conversion.total_messaging_connection',
-    // Compras / conversões
-    'offsite_conversion.fb_pixel_purchase',
-    'offsite_conversion.fb_pixel_complete_registration',
+  // Cada grupo representa um objetivo de campanha — retorna o primeiro que tiver valor
+  // para evitar double-counting entre tipos sobrepostos do mesmo objetivo
+  const GROUPS = [
+    // Grupo 1: Lead Ads (formulário nativo)
+    ['lead', 'onsite_conversion.lead_grouped'],
+    // Grupo 2: Conversas iniciadas / Mensagens (objetivo MESSAGES)
+    [
+      'onsite_conversion.messaging_conversation_started_7d',
+      'messaging_conversation_started_7d',
+      'onsite_conversion.total_messaging_connection',
+    ],
+    // Grupo 3: Lead via pixel (site externo)
+    ['offsite_conversion.fb_pixel_lead'],
+    // Grupo 4: Compra / conversão
+    ['offsite_conversion.fb_pixel_purchase', 'offsite_conversion.fb_pixel_complete_registration'],
   ]
 
-  // Soma apenas os tipos explícitos encontrados nas actions
-  // (uma conta pode ter campanhas de lead E de mensagens ao mesmo tempo)
-  const total = RESULT_TYPES
-    .map(t => actions.find(x => x.action_type === t))
-    .filter(Boolean)
-    .reduce((s, a) => s + (parseFloat(a.value) || 0), 0)
-
+  let total = 0
+  for (const group of GROUPS) {
+    // Dentro de cada grupo pega o maior valor (evita dupla contagem entre alias)
+    let groupMax = 0
+    for (const t of group) {
+      const a = actions.find(x => x.action_type === t)
+      if (a) groupMax = Math.max(groupMax, parseFloat(a.value) || 0)
+    }
+    total += groupMax
+  }
   return total
 }
 

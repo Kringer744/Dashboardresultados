@@ -91,21 +91,33 @@ export default function AccountsTable({ data, loading }) {
           {!loading && data.length > 0 && (
             <tfoot>
               <tr style={styles.tfootRow}>
+                {/* 1 - Cliente */}
                 <td style={{ ...styles.td, fontWeight: 700, color: 'var(--text)' }}>Total</td>
+                {/* 2 - Saldo Disponível — sem total agregado */}
+                <td style={styles.td} />
+                {/* 3 - Investido */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--cyan)' }}>{fCurrency(totals.spend)}</td>
+                {/* 4 - Impressões */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>{fCompact(totals.impressions)}</td>
+                {/* 5 - Alcance */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>{fCompact(totals.reach)}</td>
+                {/* 6 - Cliques */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>{fNumber(totals.clicks)}</td>
+                {/* 7 - CTR */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
                   {totals.impressions > 0 ? fPct((totals.clicks / totals.impressions) * 100) : '—'}
                 </td>
+                {/* 8 - CPM */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
                   {totals.impressions > 0 ? fCurrency((totals.spend / totals.impressions) * 1000) : '—'}
                 </td>
+                {/* 9 - Leads */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--green)' }}>{fNumber(totals.leads)}</td>
+                {/* 10 - CPL */}
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
                   {totals.leads > 0 ? fCurrency(totals.spend / totals.leads) : '—'}
                 </td>
+                {/* 11-12 - Freq + Status */}
                 <td colSpan={2} />
               </tr>
             </tfoot>
