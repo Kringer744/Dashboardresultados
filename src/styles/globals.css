@@ -44,6 +44,13 @@ html.light {
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  color-scheme: dark;
+}
+html.light {
+  color-scheme: light;
+}
+
 html, body, #root {
   height: 100%;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;

@@ -4,6 +4,11 @@ const BASE = 'https://graph.facebook.com/v21.0'
 const TOKEN = import.meta.env.VITE_META_TOKEN
 
 function getDateRange(preset) {
+  // Aceita objeto { since, until } direto (modo custom)
+  if (preset && typeof preset === 'object' && preset.since && preset.until) {
+    return { since: preset.since, until: preset.until }
+  }
+
   const now = new Date()
   const fmt = (d) => d.toISOString().split('T')[0]
   const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r }
@@ -88,6 +93,7 @@ async function fetchInsights(accountId, dateRange, timeIncrement = 'all_days') {
     time_range: JSON.stringify(dateRange),
     level: 'account',
     time_increment: timeIncrement,
+    use_unified_attribution_setting: 'true', // bate exato com Meta Ads Manager
     access_token: TOKEN,
   })
 
@@ -150,7 +156,7 @@ export async function fetchAccountInsights(accountId, preset) {
 
 export async function fetchAccountInfo(accountId) {
   const params = new URLSearchParams({
-    fields: 'name,balance,currency,amount_spent,spend_cap,account_status',
+    fields: 'id,name,balance,currency,amount_spent,spend_cap,account_status,disable_reason,funding_source_details',
     access_token: TOKEN,
   })
   const res = await fetch(`${BASE}/${accountId}?${params}`)
@@ -158,11 +164,14 @@ export async function fetchAccountInfo(accountId) {
   if (json.error) return { accountId, balance: null, currency: 'BRL' }
   return {
     accountId,
-    balance:      parseFloat(json.balance) / 100 || 0,
-    currency:     json.currency || 'BRL',
-    amountSpent:  parseFloat(json.amount_spent) / 100 || 0,
-    spendCap:     json.spend_cap ? parseFloat(json.spend_cap) / 100 : null,
-    status:       json.account_status,
+    balance:        parseFloat(json.balance) / 100 || 0,
+    currency:       json.currency || 'BRL',
+    amountSpent:    parseFloat(json.amount_spent) / 100 || 0,
+    spendCap:       json.spend_cap ? parseFloat(json.spend_cap) / 100 : null,
+    status:         json.account_status,
+    disableReason:  json.disable_reason ?? null,
+    fundingSource:  json.funding_source_details?.display_string || null,
+    fundingType:    json.funding_source_details?.type ?? null,
   }
 }
 
@@ -180,7 +189,7 @@ export async function fetchCampaigns(accountId, preset) {
     fields: [
       'id', 'name', 'status', 'effective_status', 'objective',
       'daily_budget', 'lifetime_budget', 'budget_remaining',
-      `insights.time_range(${JSON.stringify(dateRange)}){${insightsFields}}`,
+      `insights.time_range(${JSON.stringify(dateRange)}).use_unified_attribution_setting(true){${insightsFields}}`,
     ].join(','),
     effective_status: JSON.stringify(['ACTIVE', 'PAUSED']),
     limit: 100,

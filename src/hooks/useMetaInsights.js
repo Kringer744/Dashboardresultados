@@ -52,9 +52,15 @@ export function useMetaInsights(selectedIds, preset) {
     }
   }
 
+  // Permite preset string ou objeto { since, until } (custom)
+  const presetKey = typeof preset === 'string'
+    ? preset
+    : preset?.since && preset?.until ? `custom:${preset.since}:${preset.until}` : ''
+
   useEffect(() => {
+    if (!presetKey) return
     load(selectedIds, preset)
-  }, [selectedIds.join(','), preset])
+  }, [selectedIds.join(','), presetKey])
 
   const refetch = () => load(selectedIds, preset)
 

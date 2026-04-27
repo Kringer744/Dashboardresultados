@@ -2,7 +2,9 @@ import React from 'react'
 import { DATE_PRESETS } from '../config/accounts.js'
 import AlertsBell from './AlertsBell.jsx'
 
-export default function Toolbar({ preset, onPreset, onExport, onPresent, loading, accountData = [], theme = 'dark', onToggleTheme }) {
+export default function Toolbar({ preset, onPreset, customRange, onCustomRange, onExport, onPresent, loading, accountData = [], theme = 'dark', onToggleTheme }) {
+  const isCustom = preset === 'custom'
+
   return (
     <div style={styles.toolbar}>
       <div style={styles.left}>
@@ -17,7 +19,40 @@ export default function Toolbar({ preset, onPreset, onExport, onPresent, loading
               {p.label}
             </button>
           ))}
+          <button
+            style={{ ...styles.presetBtn, ...(isCustom ? styles.presetActive : {}), display: 'flex', alignItems: 'center', gap: 5 }}
+            onClick={() => onPreset('custom')}
+            title="Selecionar datas específicas"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+              <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+            Personalizar
+          </button>
         </div>
+        {isCustom && (
+          <div style={styles.dateInputs}>
+            <input
+              type="date"
+              style={styles.dateInput}
+              value={customRange?.since || ''}
+              max={customRange?.until || undefined}
+              onChange={e => onCustomRange({ ...customRange, since: e.target.value })}
+            />
+            <span style={styles.dateArrow}>→</span>
+            <input
+              type="date"
+              style={styles.dateInput}
+              value={customRange?.until || ''}
+              min={customRange?.since || undefined}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => onCustomRange({ ...customRange, until: e.target.value })}
+            />
+          </div>
+        )}
       </div>
 
       <div style={styles.right}>
@@ -55,7 +90,24 @@ const styles = {
     background: 'var(--surface)',
     flexWrap: 'wrap', gap: 10,
   },
-  left: { display: 'flex', alignItems: 'center', gap: 10 },
+  left: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+  dateInputs: {
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '4px 10px',
+    background: 'rgba(0,212,255,0.06)',
+    border: '1px solid rgba(0,212,255,0.25)',
+    borderRadius: 8,
+  },
+  dateInput: {
+    padding: '4px 8px', fontSize: 11,
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderRadius: 6,
+    color: 'var(--text)',
+    cursor: 'pointer',
+    colorScheme: 'auto',
+  },
+  dateArrow: { color: 'var(--cyan)', fontSize: 12, fontWeight: 700 },
   label: { fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 },
   presets: { display: 'flex', gap: 4, flexWrap: 'wrap' },
   presetBtn: {

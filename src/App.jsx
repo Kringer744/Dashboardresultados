@@ -14,8 +14,15 @@ import PresentationMode from './components/PresentationMode.jsx'
 const ALL_IDS = ACCOUNTS.map(a => a.id)
 
 export default function App() {
+  const todayStr = new Date().toISOString().split('T')[0]
+  const monthAgoStr = (() => {
+    const d = new Date(); d.setDate(d.getDate() - 30)
+    return d.toISOString().split('T')[0]
+  })()
+
   const [selected, setSelected] = useState(ALL_IDS)
   const [preset, setPreset]     = useState('last_30d')
+  const [customRange, setCustomRange] = useState({ since: monthAgoStr, until: todayStr })
   const [showExport, setShowExport] = useState(false)
   const [showPresent, setShowPresent] = useState(false)
   const [theme, setTheme]       = useState('dark')
@@ -24,7 +31,10 @@ export default function App() {
     document.documentElement.className = theme === 'light' ? 'light' : ''
   }, [theme])
 
-  const { data, totals, daily, daily6m, accountInfo, campaigns, loading, error, refetch, lastFetch } = useMetaInsights(selected, preset)
+  // Resolve o preset efetivo passado para a API
+  const effectivePreset = preset === 'custom' ? customRange : preset
+
+  const { data, totals, daily, daily6m, accountInfo, campaigns, loading, error, refetch, lastFetch } = useMetaInsights(selected, effectivePreset)
 
   const errCount = data.filter(r => r.error).length
 
@@ -33,7 +43,18 @@ export default function App() {
       <Sidebar selected={selected} onSelect={setSelected} accountInfo={accountInfo} />
 
       <div style={styles.main}>
-        <Toolbar preset={preset} onPreset={setPreset} onExport={() => setShowExport(true)} onPresent={() => setShowPresent(true)} loading={loading} accountData={data} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />
+        <Toolbar
+          preset={preset}
+          onPreset={setPreset}
+          customRange={customRange}
+          onCustomRange={setCustomRange}
+          onExport={() => setShowExport(true)}
+          onPresent={() => setShowPresent(true)}
+          loading={loading}
+          accountData={data}
+          theme={theme}
+          onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+        />
 
         <div style={styles.content}>
           <Header alertCount={errCount} lastFetch={lastFetch} onRefresh={refetch} loading={loading} />
@@ -52,7 +73,7 @@ export default function App() {
           <div style={styles.overview}>
             <div style={styles.overviewLabel}>
               {selected.length === ALL_IDS.length ? 'Visão Geral' : `${selected.length} cliente${selected.length !== 1 ? 's' : ''} selecionado${selected.length !== 1 ? 's' : ''}`}
-              <span style={styles.periodBadge}>{presetLabel(preset)}</span>
+              <span style={styles.periodBadge}>{presetLabel(preset, customRange)}</span>
               {loading && <span style={styles.loadingDots}>Carregando...</span>}
             </div>
 
@@ -90,11 +111,18 @@ export default function App() {
   )
 }
 
-function presetLabel(preset) {
+function presetLabel(preset, customRange) {
   const map = {
     today: 'Hoje', yesterday: 'Ontem', last_7d: '7 dias',
     last_14d: '14 dias', last_30d: '30 dias',
     this_month: 'Este mês', last_month: 'Mês anterior',
+  }
+  if (preset === 'custom' && customRange?.since && customRange?.until) {
+    const fmt = iso => {
+      const [y, m, d] = iso.split('-')
+      return `${d}/${m}`
+    }
+    return `${fmt(customRange.since)} → ${fmt(customRange.until)}`
   }
   return map[preset] || preset
 }
